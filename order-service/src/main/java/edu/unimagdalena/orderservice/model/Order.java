@@ -1,10 +1,7 @@
 package edu.unimagdalena.orderservice.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +11,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "orders")
 @Data
+@EqualsAndHashCode(of = {"id"}) // Solo usa id para equals y hashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
