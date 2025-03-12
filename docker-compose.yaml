@@ -47,11 +47,12 @@ services:
       - inventory-postgres
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5434/inventorydb
+      #SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd2
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
-      - "8180:8080"
+      - "8281:8080"
 
   payment-postgres:
     image: postgres:15-alpine
@@ -74,6 +75,7 @@ services:
       - inventory-postgres
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5434/paymentdb
+      #SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd3
       SPRING_JPA_HIBERNATE_DDL_AUTO: update

@@ -10,20 +10,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Document(collection = "products")
+@Document(collection = "productsdb")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Product {
-
     @Id
     private UUID id;
 
     private String name;
-
+    private String description;
     private BigDecimal price;
-
     private String category;
+    private Integer stock;
 }
 
