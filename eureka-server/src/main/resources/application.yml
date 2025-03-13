@@ -1,0 +1,19 @@
+server:
+  port: 8761
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+  server:
+    enableSelfPreservation: true
+    evictionIntervalTimerInMs: 60000
+    renewalThreshold: 0.85
+
+spring:
+  application:
+    name: eureka-server
+
