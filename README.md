@@ -14,10 +14,10 @@ Antes de comenzar, asegúrate de tener instalado en tu sistema:
 ### 1️⃣ **Clonar el Repositorio**
 ```bash
 # Clonar el repositorio desde GitHub
-git clone https://github.com/tu-usuario/tu-repositorio.git
+git clone https://github.com/JosCariDe/spring-microservices.git
 
 # Ir al directorio del proyecto
-cd tu-repositorio
+cd spring-microservices
 ```
 
 ### 2️⃣ **Levantar los Contenedores con Docker Compose**
