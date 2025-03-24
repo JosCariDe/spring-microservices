@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: eureka-server
     ports:
-      - "8761:8761"
+      - "8761:8861"
     networks:
       - eureka-network
 
@@ -32,7 +32,7 @@ services:
       context: ./discovery-server
       dockerfile: Dockerfile
     ports:
-      - "8761:8761"
+      - "8081:8083"
     networks:
       - eureka-network
 
@@ -64,7 +64,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     ports:
-      - "8080:8080"
+      - "8785:8786"
     networks:
       - eureka-network
 
@@ -96,7 +96,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     ports:
-      - "8281:8080"
+      - "8382:8381"
     networks:
       - eureka-network
 
@@ -129,7 +129,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     ports:
-      - "8180:8080"
+      - "8189:8180"
     networks:
       - eureka-network
 
@@ -154,7 +154,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
     ports:
-      - "8280:8080"
+      - "8280:8380"
     networks:
       - eureka-network
 

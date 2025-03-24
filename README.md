@@ -49,10 +49,13 @@ docker-compose logs -f order-service
 ### 5️⃣ **Acceder a las Aplicaciones**
 Cada microservicio se ejecuta en un puerto diferente. Asegúrate de que los puertos especificados en `docker-compose.yml` estén disponibles en tu máquina.
 
-- **Order Service:** [http://localhost:8080](http://localhost:8080)
-- **Inventory Service:** [http://localhost:8181](http://localhost:8181)
-- **Payment Service:** [http://localhost:8182](http://localhost:8182)
-- **Product Service:** [http://localhost:8280](http://localhost:8280)
+- **Eureka Client:** [http://localhost:8080](http://localhost:8080)
+- **Discovery Server:** [http://localhost:8083](http://localhost:8080)
+- **Eureka Server:** [http://localhost:8061](http://localhost:8080)
+- **Order Service:** [http://localhost:8786](http://localhost:8080)
+- **Inventory Service:** [http://localhost:8381](http://localhost:8181)
+- **Payment Service:** [http://localhost:8180](http://localhost:8182)
+- **Product Service:** [http://localhost:8380](http://localhost:8280)
 
 ### 6️⃣ **Detener los Contenedores**
 Para detener los contenedores sin eliminarlos:
