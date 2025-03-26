@@ -4,6 +4,13 @@ import edu.unimagdalena.productservice.model.Product;
 import edu.unimagdalena.productservice.repository.ProductRepository;
 import edu.unimagdalena.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,13 +22,17 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    //@Autowired
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
+    @Cacheable(value = "product")
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     @Override
+    @Cacheable(value = "product", key = "#id")
     public Optional<Product> getProductById(UUID id) {
         return productRepository.findById(id);
     }
@@ -35,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CachePut(value = "product", key = "#id")
     public Optional<Product> updateProduct(UUID id, Product productDetails) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
@@ -52,6 +64,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "product", key = "#id") // Elimina el producto de la caché al borrarlo
     public void deleteProduct(UUID id) {
         productRepository.deleteById(id);
     }
