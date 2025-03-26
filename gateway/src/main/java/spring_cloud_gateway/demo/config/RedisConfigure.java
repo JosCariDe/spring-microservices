@@ -27,6 +27,13 @@ public class RedisConfigure {
         return RedisCacheManager.builder(redisConnectionFactory).cacheDefaults(redisCacheConfiguration).build();
     }
 
-    //@Bean
-    public RedisTemplate<String, >
+    @Bean //template para operar con el redis
+    public RedisTemplate<String, Object> RedisTemplate(RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
+    }
+    
 }
