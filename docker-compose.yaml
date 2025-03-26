@@ -36,6 +36,20 @@ services:
     networks:
       - eureka-network
 
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    depends_on:
+      - discovery-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+    ports:
+      - "4000:4040"
+    networks:
+      - eureka-network
+
   order-postgres:
     image: postgres:15-alpine
     container_name: order_postgres_db
