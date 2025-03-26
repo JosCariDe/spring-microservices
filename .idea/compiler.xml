@@ -13,9 +13,10 @@
         <module name="discovery-server" />
         <module name="eureka-client" />
         <module name="demo (2)" />
-        <module name="eureka-server" />
         <module name="demo (1)" />
         <module name="demo (3)" />
+        <module name="eureka-server" />
+        <module name="gateway" />
       </profile>
       <profile name="Annotation profile for product-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -41,6 +42,7 @@
       <module name="discovery-server" options="-parameters" />
       <module name="eureka-client" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="gateway" options="-parameters" />
       <module name="inventory-service" options="-parameters" />
       <module name="order-service" options="-parameters" />
       <module name="payment-service" options="-parameters" />
