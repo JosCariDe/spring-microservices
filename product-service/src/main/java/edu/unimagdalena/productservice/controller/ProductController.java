@@ -18,32 +18,32 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping
+    @GetMapping("/getall")
     public Flux<Product> getAllProducts() {
         return Flux.fromIterable(productService.getAllProducts());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/getby{id}")
     public Mono<ResponseEntity<Product>> getProductById(@PathVariable UUID id) {
         return Mono.justOrEmpty(productService.getProductById(id))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public Mono<ResponseEntity<Product>> createProduct(@RequestBody Product product) {
         return Mono.just(productService.createProduct(product))
                 .map(savedProduct -> ResponseEntity.status(HttpStatus.CREATED).body(savedProduct));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/updateby{id}")
     public Mono<ResponseEntity<Product>> updateProduct(@PathVariable UUID id, @RequestBody Product product) {
         return Mono.justOrEmpty(productService.updateProduct(id, product))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteby{id}")
     public Mono<ResponseEntity<Void>> deleteProduct(@PathVariable UUID id) {
         productService.deleteProduct(id);
         return Mono.just(ResponseEntity.noContent().build());
