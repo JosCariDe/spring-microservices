@@ -21,6 +21,8 @@ public class Inventory {
     @GeneratedValue
     private UUID id;
 
+
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<UUID> products;
 }
 

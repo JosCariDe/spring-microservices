@@ -20,7 +20,8 @@ public class Order {
     @Id
     @GeneratedValue
     private UUID id;
-    @ElementCollection
+    
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<UUID> products;
 
     private LocalDateTime orderDate;
