@@ -13,4 +13,3 @@ public interface InventoryService {
     Optional<Inventory> updateInventory(UUID id, Inventory inventoryDetails);
     void deleteInventory(UUID id);
 }
-

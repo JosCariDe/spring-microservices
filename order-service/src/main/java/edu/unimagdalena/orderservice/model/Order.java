@@ -20,7 +20,7 @@ public class Order {
     @Id
     @GeneratedValue
     private UUID id;
-
+    @ElementCollection
     private List<UUID> products;
 
     private LocalDateTime orderDate;

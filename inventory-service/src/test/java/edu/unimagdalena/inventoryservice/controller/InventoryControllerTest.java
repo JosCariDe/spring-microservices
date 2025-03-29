@@ -178,4 +178,3 @@ public class InventoryControllerTest {
                 .expectStatus().isNotFound();
     }
 }
-

@@ -49,4 +49,3 @@ public class InventoryController {
         return Mono.just(ResponseEntity.noContent().build());
     }
 }
-
