@@ -70,7 +70,6 @@ public class InventoryControllerTest {
     void getAllInventories_ShouldReturnAllInventories() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/inventory")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Inventory.class)
@@ -86,7 +85,7 @@ public class InventoryControllerTest {
     void getInventoryById_WithExistingId_ShouldReturnInventory() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/inventory/{id}", testInventory.getId())
+                .uri("/{id}", testInventory.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Inventory.class)
@@ -100,7 +99,7 @@ public class InventoryControllerTest {
     void getInventoryById_WithNonExistingId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/inventory/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -115,7 +114,6 @@ public class InventoryControllerTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/inventory")
                 .bodyValue(newInventory)
                 .exchange()
                 .expectStatus().isCreated()
@@ -136,7 +134,7 @@ public class InventoryControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/inventory/{id}", testInventory.getId())
+                .uri("/{id}", testInventory.getId())
                 .bodyValue(inventoryUpdate)
                 .exchange()
                 .expectStatus().isOk()
@@ -157,7 +155,7 @@ public class InventoryControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/inventory/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .bodyValue(inventoryUpdate)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -167,13 +165,13 @@ public class InventoryControllerTest {
     void deleteInventory_ShouldRemoveInventory() {
         // Act & Assert
         webTestClient.delete()
-                .uri("/api/inventory/{id}", testInventory.getId())
+                .uri("/{id}", testInventory.getId())
                 .exchange()
                 .expectStatus().isNoContent();
 
         // Verify inventory was deleted
         webTestClient.get()
-                .uri("/api/inventory/{id}", testInventory.getId())
+                .uri("/{id}", testInventory.getId())
                 .exchange()
                 .expectStatus().isNotFound();
     }

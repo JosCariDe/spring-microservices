@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/inventory")
 @RequiredArgsConstructor
 public class InventoryController {
 

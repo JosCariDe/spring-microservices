@@ -75,7 +75,6 @@ public class OrderControllerTest {
     void getAllOrders_ShouldReturnAllOrders() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/orders")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Order.class)
@@ -96,7 +95,7 @@ public class OrderControllerTest {
     void getOrderById_WithExistingId_ShouldReturnOrder() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/orders/{id}", testOrder.getId())
+                .uri("/{id}", testOrder.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Order.class)
@@ -114,7 +113,7 @@ public class OrderControllerTest {
     void getOrderById_WithNonExistingId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/orders/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -130,7 +129,6 @@ public class OrderControllerTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/orders")
                 .bodyValue(newOrder)
                 .exchange()
                 .expectStatus().isCreated()
@@ -154,7 +152,7 @@ public class OrderControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/orders/{id}", testOrder.getId())
+                .uri("/{id}", testOrder.getId())
                 .bodyValue(orderUpdate)
                 .exchange()
                 .expectStatus().isOk()
@@ -178,7 +176,7 @@ public class OrderControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/orders/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .bodyValue(orderUpdate)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -188,7 +186,7 @@ public class OrderControllerTest {
     void updateOrderStatus_WithExistingId_ShouldReturnUpdatedOrder() {
         // Act & Assert
         webTestClient.patch()
-                .uri("/api/orders/{id}/status", testOrder.getId())
+                .uri("/{id}/status", testOrder.getId())
                 .bodyValue(OrderStatus.SHIPPED)
                 .exchange()
                 .expectStatus().isOk()
@@ -207,7 +205,7 @@ public class OrderControllerTest {
     void updateOrderStatus_WithNonExistingId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.patch()
-                .uri("/api/orders/{id}/status", UUID.randomUUID())
+                .uri("/{id}/status", UUID.randomUUID())
                 .bodyValue(OrderStatus.SHIPPED)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -217,13 +215,13 @@ public class OrderControllerTest {
     void deleteOrder_ShouldRemoveOrder() {
         // Act & Assert
         webTestClient.delete()
-                .uri("/api/orders/{id}", testOrder.getId())
+                .uri("/{id}", testOrder.getId())
                 .exchange()
                 .expectStatus().isNoContent();
 
         // Verify order was deleted
         webTestClient.get()
-                .uri("/api/orders/{id}", testOrder.getId())
+                .uri("/{id}", testOrder.getId())
                 .exchange()
                 .expectStatus().isNotFound();
     }

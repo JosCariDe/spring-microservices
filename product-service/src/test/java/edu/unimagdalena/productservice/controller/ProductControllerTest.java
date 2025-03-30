@@ -66,7 +66,6 @@ public class ProductControllerTest {
     void getAllProducts_ShouldReturnAllProducts() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/products")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Product.class)
@@ -84,7 +83,7 @@ public class ProductControllerTest {
     void getProductById_WithExistingId_ShouldReturnProduct() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/products/{id}", testProduct.getId())
+                .uri("/{id}", testProduct.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Product.class)
@@ -100,7 +99,7 @@ public class ProductControllerTest {
     void getProductById_WithNonExistingId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/products/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -116,7 +115,6 @@ public class ProductControllerTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/products")
                 .bodyValue(newProduct)
                 .exchange()
                 .expectStatus().isCreated()
@@ -139,7 +137,7 @@ public class ProductControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/products/{id}", testProduct.getId())
+                .uri("/{id}", testProduct.getId())
                 .bodyValue(productUpdate)
                 .exchange()
                 .expectStatus().isOk()
@@ -161,7 +159,7 @@ public class ProductControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/products/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .bodyValue(productUpdate)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -171,13 +169,13 @@ public class ProductControllerTest {
     void deleteProduct_ShouldRemoveProduct() {
         // Act & Assert
         webTestClient.delete()
-                .uri("/api/products/{id}", testProduct.getId())
+                .uri("/{id}", testProduct.getId())
                 .exchange()
                 .expectStatus().isNoContent();
 
         // Verify product was deleted
         webTestClient.get()
-                .uri("/api/products/{id}", testProduct.getId())
+                .uri("/{id}", testProduct.getId())
                 .exchange()
                 .expectStatus().isNotFound();
     }

@@ -1,21 +1,9 @@
 server:
-  port: 4040  # Puerto del Gateway
+  port: 4040
 
 spring:
   application:
     name: api-gateway
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 60000
-      cache:
-        type: redis
-
-    cache:
-      redis:
-        time-to-live: 600000  # 10 minutos (en milisegundos)
 
   cloud:
     gateway:
@@ -23,6 +11,31 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      routes:
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=2
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - StripPrefix=2
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=2
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=2
 
 eureka:
   client:

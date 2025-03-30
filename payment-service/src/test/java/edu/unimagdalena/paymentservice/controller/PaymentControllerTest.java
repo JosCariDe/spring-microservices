@@ -77,7 +77,6 @@ public class PaymentControllerTest {
     void getAllPayments_ShouldReturnAllPayments() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/payments")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Payment.class)
@@ -98,7 +97,7 @@ public class PaymentControllerTest {
     void getPaymentById_WithExistingId_ShouldReturnPayment() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/payments/{id}", testPayment.getId())
+                .uri("/{id}", testPayment.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Payment.class)
@@ -117,7 +116,7 @@ public class PaymentControllerTest {
     void getPaymentById_WithNonExistingId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/payments/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -126,7 +125,7 @@ public class PaymentControllerTest {
     void getPaymentByOrderId_WithExistingOrderId_ShouldReturnPayment() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/payments/order/{orderId}", orderId)
+                .uri("/order/{orderId}", orderId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Payment.class)
@@ -143,7 +142,7 @@ public class PaymentControllerTest {
     void getPaymentByOrderId_WithNonExistingOrderId_ShouldReturnNotFound() {
         // Act & Assert
         webTestClient.get()
-                .uri("/api/payments/order/{orderId}", UUID.randomUUID())
+                .uri("/order/{orderId}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -159,7 +158,6 @@ public class PaymentControllerTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/payments")
                 .bodyValue(newPayment)
                 .exchange()
                 .expectStatus().isCreated()
@@ -185,7 +183,7 @@ public class PaymentControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/payments/{id}", testPayment.getId())
+                .uri("/{id}", testPayment.getId())
                 .bodyValue(paymentUpdate)
                 .exchange()
                 .expectStatus().isOk()
@@ -210,7 +208,7 @@ public class PaymentControllerTest {
 
         // Act & Assert
         webTestClient.put()
-                .uri("/api/payments/{id}", UUID.randomUUID())
+                .uri("/{id}", UUID.randomUUID())
                 .bodyValue(paymentUpdate)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -220,13 +218,13 @@ public class PaymentControllerTest {
     void deletePayment_ShouldRemovePayment() {
         // Act & Assert
         webTestClient.delete()
-                .uri("/api/payments/{id}", testPayment.getId())
+                .uri("/{id}", testPayment.getId())
                 .exchange()
                 .expectStatus().isNoContent();
 
         // Verify payment was deleted
         webTestClient.get()
-                .uri("/api/payments/{id}", testPayment.getId())
+                .uri("/{id}", testPayment.getId())
                 .exchange()
                 .expectStatus().isNotFound();
     }
