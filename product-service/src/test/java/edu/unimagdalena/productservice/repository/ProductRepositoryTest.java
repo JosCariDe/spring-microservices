@@ -41,9 +41,10 @@ public class ProductRepositoryTest {
 
     @Test
     void saveProduct_ShouldPersistProduct() {
+        String id = UUID.randomUUID().toString();
         // Arrange
         Product product = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id)
                 .name("Test Product")
                 .price(new BigDecimal("99.99"))
                 .category("Electronics")
@@ -62,8 +63,9 @@ public class ProductRepositoryTest {
     @Test
     void findById_WithExistingId_ShouldReturnProduct() {
         // Arrange
+        String id = UUID.randomUUID().toString();
         Product product = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id)
                 .name("Test Product")
                 .price(new BigDecimal("99.99"))
                 .category("Electronics")
@@ -83,7 +85,8 @@ public class ProductRepositoryTest {
     @Test
     void findById_WithNonExistingId_ShouldReturnEmpty() {
         // Act
-        Optional<Product> foundProduct = productRepository.findById(UUID.randomUUID());
+        String id = UUID.randomUUID().toString();
+        Optional<Product> foundProduct = productRepository.findById(id);
 
         // Assert
         assertThat(foundProduct).isEmpty();
@@ -93,16 +96,17 @@ public class ProductRepositoryTest {
     void findAll_ShouldReturnAllProducts() {
         // Arrange
         productRepository.deleteAll(); // Ensure clean state
-
+        String id1 = UUID.randomUUID().toString();
+        String id2 = UUID.randomUUID().toString();
         Product product1 = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id1)
                 .name("Product 1")
                 .price(new BigDecimal("49.99"))
                 .category("Books")
                 .build();
 
         Product product2 = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id2)
                 .name("Product 2")
                 .price(new BigDecimal("149.99"))
                 .category("Electronics")
@@ -120,8 +124,9 @@ public class ProductRepositoryTest {
     @Test
     void deleteById_ShouldRemoveProduct() {
         // Arrange
+        String id1 = UUID.randomUUID().toString();
         Product product = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id1)
                 .name("Test Product")
                 .price(new BigDecimal("99.99"))
                 .category("Electronics")

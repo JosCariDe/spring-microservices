@@ -23,7 +23,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Product>> getProductById(@PathVariable UUID id) {
+    public Mono<ResponseEntity<Product>> getProductById(@PathVariable String id) {
         return Mono.justOrEmpty(productService.getProductById(id))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -36,14 +36,14 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Product>> updateProduct(@PathVariable UUID id, @RequestBody Product product) {
+    public Mono<ResponseEntity<Product>> updateProduct(@PathVariable String id, @RequestBody Product product) {
         return Mono.justOrEmpty(productService.updateProduct(id, product))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteProduct(@PathVariable UUID id) {
+    public Mono<ResponseEntity<Void>> deleteProduct(@PathVariable String id) {
         productService.deleteProduct(id);
         return Mono.just(ResponseEntity.noContent().build());
     }

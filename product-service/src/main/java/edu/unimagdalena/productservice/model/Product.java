@@ -18,7 +18,7 @@ import java.util.UUID;
 public class Product {
 
     @Id
-    private UUID id;
+    private String id;
 
     private String name;
 

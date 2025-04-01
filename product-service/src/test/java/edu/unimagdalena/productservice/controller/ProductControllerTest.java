@@ -46,9 +46,10 @@ public class ProductControllerTest {
         webTestClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
+        String id1 = UUID.randomUUID().toString();
 
         testProduct = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id1)
                 .name("Test Product")
                 .price(new BigDecimal("99.99"))
                 .category("Electronics")

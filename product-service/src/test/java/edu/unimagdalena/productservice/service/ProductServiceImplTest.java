@@ -30,11 +30,12 @@ public class ProductServiceImplTest {
     private ProductServiceImpl productService;
 
     private Product product;
-    private UUID productId;
+    private String productId;
 
     @BeforeEach
     void setUp() {
-        productId = UUID.randomUUID();
+        productId = UUID.randomUUID().toString();
+        ;
         product = Product.builder()
                 .id(productId)
                 .name("Test Product")
@@ -46,7 +47,8 @@ public class ProductServiceImplTest {
     @Test
     void getAllProducts_ShouldReturnAllProducts() {
         // Arrange
-        List<Product> products = Arrays.asList(product, Product.builder().id(UUID.randomUUID()).build());
+        String id = UUID.randomUUID().toString();
+        List<Product> products = Arrays.asList(product, Product.builder().id(id).build());
         when(productRepository.findAll()).thenReturn(products);
 
         // Act
@@ -75,7 +77,8 @@ public class ProductServiceImplTest {
     @Test
     void getProductById_WithNonExistingId_ShouldReturnEmpty() {
         // Arrange
-        UUID nonExistingId = UUID.randomUUID();
+        String nonExistingId = UUID.randomUUID().toString();
+
         when(productRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
         // Act
@@ -95,8 +98,9 @@ public class ProductServiceImplTest {
                 .category("Books")
                 .build();
 
+        String id = UUID.randomUUID().toString();
         Product savedProduct = Product.builder()
-                .id(UUID.randomUUID())
+                .id(id)
                 .name(newProduct.getName())
                 .price(newProduct.getPrice())
                 .category(newProduct.getCategory())
@@ -165,7 +169,8 @@ public class ProductServiceImplTest {
     @Test
     void updateProduct_WithNonExistingId_ShouldReturnEmpty() {
         // Arrange
-        UUID nonExistingId = UUID.randomUUID();
+        String nonExistingId = UUID.randomUUID().toString();
+
         Product productToUpdate = Product.builder()
                 .name("Updated Product")
                 .build();

@@ -22,20 +22,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<Product> getProductById(UUID id) {
+    public Optional<Product> getProductById(String id) {
         return productRepository.findById(id);
     }
 
     @Override
     public Product createProduct(Product product) {
-        if (product.getId() == null) {
-            product.setId(UUID.randomUUID());
-        }
+
         return productRepository.save(product);
     }
 
     @Override
-    public Optional<Product> updateProduct(UUID id, Product productDetails) {
+    public Optional<Product> updateProduct(String id, Product productDetails) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
                     if (productDetails.getName() != null) {
@@ -52,7 +50,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProduct(UUID id) {
+    public void deleteProduct(String id) {
         productRepository.deleteById(id);
     }
 }

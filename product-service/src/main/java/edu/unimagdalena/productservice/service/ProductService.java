@@ -11,10 +11,10 @@ import java.util.UUID;
 
 public interface ProductService {
     List<Product> getAllProducts();
-    Optional<Product> getProductById(UUID id);
+    Optional<Product> getProductById(String id);
     Product createProduct(Product product);
-    Optional<Product> updateProduct(UUID id, Product productDetails);
-    void deleteProduct(UUID id);
+    Optional<Product> updateProduct(String id, Product productDetails);
+    void deleteProduct(String id);
 }
 
 

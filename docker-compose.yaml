@@ -86,6 +86,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - order-postgres
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/orderdb
       SPRING_DATASOURCE_USERNAME: user
@@ -119,6 +120,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - inventory-postgres
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
       SPRING_DATASOURCE_USERNAME: user
@@ -152,7 +154,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - payment-postgres
-      - discovery-server
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
       SPRING_DATASOURCE_USERNAME: user
@@ -182,6 +184,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mongo
+      - eureka-server
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/

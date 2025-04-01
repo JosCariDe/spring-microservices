@@ -86,7 +86,7 @@ Si un servicio no puede conectarse a su base de datos, revisa:
 - Que las credenciales en `docker-compose.yml` son correctas
 - Intenta reiniciar los servicios con:
   ```bash
-  docker-compose down && docker-compose up --build -d
+  docker-compose down -v && docker-compose up --build -d
   ```
 
 ---
