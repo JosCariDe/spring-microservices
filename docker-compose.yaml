@@ -44,6 +44,7 @@ services:
     depends_on:
       - discovery-server
       - redis
+      - eureka-server
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
       SPRING_DATA_REDIS_HOST: redis
