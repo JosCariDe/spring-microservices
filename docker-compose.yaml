@@ -43,13 +43,25 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - discovery-server
+      - redis
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "4000:4040"
     networks:
       - eureka-network
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - eureka-network
 
   order-postgres:
     image: postgres:15-alpine
@@ -182,6 +194,7 @@ volumes:
   inventory_pgdata:
   payment_pgdata:
   mongo_data:
+  redis-data:
 
 networks:
   eureka-network:

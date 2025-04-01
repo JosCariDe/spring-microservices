@@ -18,24 +18,33 @@ spring:
             - Path=/api/orders/**
           filters:
             - StripPrefix=2
+            - RedisCacheResponseFilter=30s
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
             - Path=/api/inventory/**
           filters:
             - StripPrefix=2
+            - RedisCacheResponseFilter=30s
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
           filters:
             - StripPrefix=2
+            - RedisCacheResponseFilter=30s
         - id: payment-service
           uri: lb://payment-service
           predicates:
             - Path=/api/payments/**
           filters:
             - StripPrefix=2
+            - RedisCacheResponseFilter=30s
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 eureka:
   client:

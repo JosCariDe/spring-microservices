@@ -4,6 +4,7 @@ import edu.unimagdalena.inventoryservice.model.Inventory;
 import edu.unimagdalena.inventoryservice.repository.InventoryRepository;
 import edu.unimagdalena.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
