@@ -10,6 +10,8 @@ Antes de comenzar, asegúrate de tener instalado en tu sistema:
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
 ## 🚀 **Pasos para Configurar y Ejecutar el Proyecto**
+NO EJECUTAR EL SERVICIO REDIS, sigue en desarrollo para mostrar caché
+### 🔴 **Error de conexión a la base de datos**
 
 ### 1️⃣ **Clonar el Repositorio**
 ```bash
@@ -57,6 +59,51 @@ Cada microservicio se ejecuta en un puerto diferente. Asegúrate de que los puer
 - **Payment Service:** [http://localhost:8180](http://localhost:8182)
 - **Product Service:** [http://localhost:8380](http://localhost:8280)
 
+### 🌐 **Configuración del API Gateway**
+```yaml
+server:
+  port: 4040
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=2
+            - RedisCacheResponseFilter=30s
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - StripPrefix=2
+            - RedisCacheResponseFilter=30s
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=2
+            - RedisCacheResponseFilter=30s
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=2
+            - RedisCacheResponseFilter=30s
+```
 ### 6️⃣ **Detener los Contenedores**
 Para detener los contenedores sin eliminarlos:
 ```bash
