@@ -1,6 +1,8 @@
 package unimagdalena.edu.gateway.filters;
 
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -23,6 +25,7 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate;
 @Component
 public class RedisCacheResponseFilter extends AbstractGatewayFilterFactory<RedisCacheResponseFilter.Config> {
     private final ReactiveRedisTemplate<String, String> redisTemplate;
+    private static final Logger log = LoggerFactory.getLogger(RedisCacheResponseFilter.class);
 
     public RedisCacheResponseFilter(@Qualifier("reactiveStringRedisTemplate") ReactiveRedisTemplate<String, String> redisTemplate) {
         super(Config.class);
@@ -37,12 +40,24 @@ public class RedisCacheResponseFilter extends AbstractGatewayFilterFactory<Redis
 
             return redisTemplate.opsForValue().get(cacheKey)
                     .flatMap(cachedResponse -> {
+                        log.debug("Cache HIT: {}", cacheKey);
+                        ServerHttpResponse response = exchange.getResponse();
+                        response.getHeaders().add("X-Cache-Status", "HIT");
+
                         byte[] bytes = cachedResponse.getBytes(StandardCharsets.UTF_8);
                         DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
                         return exchange.getResponse().writeWith(Mono.just(buffer));
                     })
                     .switchIfEmpty(
-                            chain.filter(exchange.mutate().response(decorateResponse(exchange.getResponse(), cacheKey, ttl)).build())
+                            Mono.defer(() -> {
+                                log.debug("Cache MISS: {}", cacheKey);
+                                ServerHttpResponse originalResponse = exchange.getResponse();
+                                originalResponse.getHeaders().add("X-Cache-Status", "MISS");
+
+                                return chain.filter(exchange.mutate()
+                                        .response(decorateResponse(originalResponse, cacheKey, ttl))
+                                        .build());
+                            })
                     );
         };
     }

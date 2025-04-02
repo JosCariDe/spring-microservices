@@ -18,28 +18,29 @@ spring:
             - Path=/api/orders/**
           filters:
             - StripPrefix=2
-            - RedisCacheResponseFilter=30s
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
             - Path=/api/inventory/**
           filters:
             - StripPrefix=2
-            - RedisCacheResponseFilter=30s
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 20
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
           filters:
             - StripPrefix=2
-            - RedisCacheResponseFilter=30s
         - id: payment-service
           uri: lb://payment-service
           predicates:
             - Path=/api/payments/**
           filters:
             - StripPrefix=2
-            - RedisCacheResponseFilter=30s
 
   data:
     redis:

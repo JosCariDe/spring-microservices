@@ -1,9 +1,11 @@
 package edu.unimagdalena.inventoryservice.service;
 
+import edu.unimagdalena.inventoryservice.config.CacheConfig;
 import edu.unimagdalena.inventoryservice.model.Inventory;
 import edu.unimagdalena.inventoryservice.repository.InventoryRepository;
 import edu.unimagdalena.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
 
+    public static final String INVENTORY_CACHE = "inventory";
     private final InventoryRepository inventoryRepository;
 
     @Override
@@ -23,6 +26,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Cacheable(value = INVENTORY_CACHE, key = "#id")
     public Optional<Inventory> getInventoryById(UUID id) {
         return inventoryRepository.findById(id);
     }
@@ -33,6 +37,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @CachePut(value = INVENTORY_CACHE, key = "#id")
     public Optional<Inventory> updateInventory(UUID id, Inventory inventoryDetails) {
         return inventoryRepository.findById(id)
                 .map(existingInventory -> {

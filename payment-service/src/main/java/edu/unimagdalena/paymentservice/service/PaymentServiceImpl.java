@@ -5,6 +5,8 @@ import edu.unimagdalena.paymentservice.model.PaymentStatus;
 import edu.unimagdalena.paymentservice.repository.PaymentRepository;
 import edu.unimagdalena.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +18,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
+    public static final String PAYMENT_CACHE = "payment";
+
+
     private final PaymentRepository paymentRepository;
 
     @Override
@@ -24,6 +29,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Cacheable(value = PAYMENT_CACHE, key = "#id")
     public Optional<Payment> getPaymentById(UUID id) {
         return paymentRepository.findById(id);
     }
@@ -45,6 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @CachePut(value = PAYMENT_CACHE, key = "#id")
     public Optional<Payment> updatePayment(UUID id, Payment paymentDetails) {
         return paymentRepository.findById(id)
                 .map(existingPayment -> {
