@@ -18,6 +18,10 @@ eureka:
       defaultZone: http://localhost:8861/eureka
     register-with-eureka: true
     fetch-registry: true
+    initial-instance-info-replication-interval-seconds: 5
+    registry-fetch-interval-seconds: 5
+    eureka-service-url-poll-interval-seconds: 5
+    instance-info-replication-interval-seconds: 5
   instance:
     hostname: localhost
     prefer-ip-address: true
