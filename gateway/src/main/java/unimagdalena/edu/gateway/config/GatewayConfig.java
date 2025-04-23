@@ -6,17 +6,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import unimagdalena.edu.gateway.filters.CorrelationIdFilter;
 import unimagdalena.edu.gateway.filters.ProductCacheFilter;
+import unimagdalena.edu.gateway.filters.factory.SampleCookieGatewayFilterFactory;
 
 @Configuration
 public class GatewayConfig {
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder, SampleCookieGatewayFilterFactory cookieFilter) {
         return builder.routes()
                 // Ruta para order-service
                 .route("order-service", r -> r
                         .path("/api/orders/**")
-                        .filters(f -> f
+                        .filters(f -> (org.springframework.cloud.gateway.route.builder.UriSpec) f
                                 .stripPrefix(2)
                                 .filter(new CorrelationIdFilter()))
                         .uri("lb://order-service"))
@@ -44,4 +45,5 @@ public class GatewayConfig {
                         .uri("lb://payment-service"))
                 .build();
     }
+
 }
