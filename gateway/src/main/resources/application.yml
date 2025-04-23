@@ -12,6 +12,21 @@ spring:
           enabled: true
           lower-case-service-id: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          gateway:
+            provider: my-provider
+            client-id: my-client
+            client-secret: Sht1KlSVMcXR48JuGHwDIGsjShNw4TyO
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:4040/login/oauth2/code/{registrationId}"
+            scope: openid, messager.read
+        provider:
+          my-provider:
+            issuer-uri: http://localhost:9090/auth/realms/my_realm
+
 eureka:
   client:
     service-url:
@@ -26,17 +41,3 @@ eureka:
     hostname: localhost
     prefer-ip-address: true
 
-    security:
-      oauth2:
-        client:
-          registration:
-            gateway:
-              provider: my-provider
-              client-id: my-client
-              client-secret: Sht1KlSVMcXR48JuGHwDIGsjShNw4TyO
-              authorization-grant-type: authorization_code
-              redirect-uri: "http://localhost:4040/login/oauth2/code/{registrationId}"
-              scope: openid, messager.read
-          provider:
-            my-provider:
-              issuer-uri: http://localhost:9090/auth/realms/my_realm
