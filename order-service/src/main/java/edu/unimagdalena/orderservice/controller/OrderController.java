@@ -4,6 +4,8 @@ import edu.unimagdalena.orderservice.model.Order;
 import edu.unimagdalena.orderservice.model.OrderStatus;
 import edu.unimagdalena.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,15 +18,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
 
+    private final Logger logger = LoggerFactory.getLogger(OrderController.class);
+
     private final OrderService orderService;
 
     @GetMapping
     public Flux<Order> getAllOrders() {
+        logger.info("Get all orders");
         return Flux.fromIterable(orderService.getAllOrders());
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Order>> getOrderById(@PathVariable UUID id) {
+
+        logger.info("Get order by id {}", id);
+
         return Mono.justOrEmpty(orderService.getOrderById(id))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());

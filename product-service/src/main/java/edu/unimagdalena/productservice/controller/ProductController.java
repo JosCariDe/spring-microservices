@@ -3,6 +3,8 @@ package edu.unimagdalena.productservice.controller;
 import edu.unimagdalena.productservice.model.Product;
 import edu.unimagdalena.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +17,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductController {
 
+
+    private final Logger logger = LoggerFactory.getLogger(ProductController.class);
     private final ProductService productService;
 
     @GetMapping
     public Flux<Product> getAllProducts() {
+        logger.info("Get all products");
         return Flux.fromIterable(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Product>> getProductById(@PathVariable String id) {
+        logger.info("Get product by id: {}", id);
         return Mono.justOrEmpty(productService.getProductById(id))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());

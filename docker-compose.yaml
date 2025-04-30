@@ -93,6 +93,14 @@ services:
     networks:
       - eureka-network
 
+  zipkin:
+    image: openzipkin/zipkin
+    restart: always
+    environment:
+      - STORAGE_TYPE=mem
+    ports:
+      - 9411:9411
+
   order-postgres:
     image: postgres:15-alpine
     container_name: order_postgres_db
