@@ -5,7 +5,6 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import unimagdalena.edu.gateway.filters.CorrelationIdFilter;
-import unimagdalena.edu.gateway.filters.ProductCacheFilter;
 import unimagdalena.edu.gateway.filters.factory.SampleCookieGatewayFilterFactory;
 
 @Configuration
@@ -33,8 +32,7 @@ public class GatewayConfig {
                         .path("/api/products/**")
                         .filters(f -> f
                                 .stripPrefix(2)
-                                .filter(new CorrelationIdFilter())
-                                .filter(new ProductCacheFilter()))
+                                .filter(new CorrelationIdFilter()))
                         .uri("lb://product-service"))
                 // Ruta para payment-service
                 .route("payment-service", r -> r
