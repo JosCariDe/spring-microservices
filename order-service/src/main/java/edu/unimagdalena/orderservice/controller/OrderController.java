@@ -6,6 +6,7 @@ import edu.unimagdalena.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,24 +15,26 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+@RefreshScope
 @RestController
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final Logger logger = LoggerFactory.getLogger(OrderController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     private final OrderService orderService;
 
     @GetMapping
     public Flux<Order> getAllOrders() {
-        logger.info("Get all orders");
+
+        logger.info("Ingresando al metodo del controller ProductController::list");
+
         return Flux.fromIterable(orderService.getAllOrders());
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Order>> getOrderById(@PathVariable UUID id) {
 
-        logger.info("Get order by id {}", id);
 
         return Mono.justOrEmpty(orderService.getOrderById(id))
                 .map(ResponseEntity::ok)
@@ -63,5 +66,6 @@ public class OrderController {
         orderService.deleteOrder(id);
         return Mono.just(ResponseEntity.noContent().build());
     }
+
 }
 

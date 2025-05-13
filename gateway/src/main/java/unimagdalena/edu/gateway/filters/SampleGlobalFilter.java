@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -13,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
-//@Component
+@Component
 public class SampleGlobalFilter implements GlobalFilter, Ordered {
 
     private final Logger logger = LoggerFactory.getLogger(SampleGlobalFilter.class);
@@ -21,17 +20,17 @@ public class SampleGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         //PRE
-        logger.info("Ejecutando global filter antes del requuest PRE");
+
+        logger.info("Ejecutando global filter antes del request PRE");
 
         exchange.getRequest().mutate().headers(header -> header.add("token", "PRE-TOKEn"));
 
         //POST
         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-            logger.info("Ejecutando global filter requuest POST");
+            logger.info("Ejecutando global filter request POST");
 
             //Programación Funcional
             Optional.ofNullable(exchange.getRequest().getHeaders().getFirst("token")).ifPresent(value -> {
-               logger.info("Token is: " + value);
                exchange.getResponse().getHeaders().add("token", value);
             });
 

@@ -17,29 +17,25 @@ public class GatewayConfig {
                 .route("order-service", r -> r
                         .path("/api/orders/**")
                         .filters(f -> (org.springframework.cloud.gateway.route.builder.UriSpec) f
-                                .stripPrefix(2)
-                                .filter(new CorrelationIdFilter()))
+                                .stripPrefix(2))
                         .uri("lb://order-service"))
                 // Ruta para inventory-service con RequestRateLimiter
                 .route("inventory-service", r -> r
                         .path("/api/inventory/**")
                         .filters(f -> f
-                                .stripPrefix(2)
-                                .filter(new CorrelationIdFilter()))
+                                .stripPrefix(2))
                         .uri("lb://inventory-service"))
                 // Ruta para product-service
                 .route("product-service", r -> r
                         .path("/api/products/**")
                         .filters(f -> f
-                                .stripPrefix(2)
-                                .filter(new CorrelationIdFilter()))
+                                .stripPrefix(2))
                         .uri("lb://product-service"))
                 // Ruta para payment-service
                 .route("payment-service", r -> r
                         .path("/api/payments/**")
                         .filters(f -> f
-                                .stripPrefix(2)
-                                .filter(new CorrelationIdFilter()))
+                                .stripPrefix(2))
                         .uri("lb://payment-service"))
                 .build();
     }
