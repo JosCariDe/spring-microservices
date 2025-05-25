@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +29,18 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Product>> getProductById(@PathVariable String id) {
+    public Mono<ResponseEntity<Product>> getProductById(@PathVariable String id) throws InterruptedException {
+
+        if (id.equals("550e8400-e29b-41d4-a716-446655440010")) {
+            throw new IllegalStateException("PRODUCTO NO ENCONTRADO");
+        }
+
+
+
+        if (id.equals("550e8400-e29b-41d4-a716-446655440007")) {
+            TimeUnit.SECONDS.sleep(5L); //5 Segundo de demora Para abrir CircuitBraker
+        }
+
         logger.info("Get product by id: {}", id);
         return Mono.justOrEmpty(productService.getProductById(id))
                 .map(ResponseEntity::ok)

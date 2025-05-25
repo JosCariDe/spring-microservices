@@ -1,16 +1,21 @@
 package edu.unimagdalena.paymentservice.controller;
 
+import edu.unimagdalena.paymentservice.model.Order;
+import edu.unimagdalena.paymentservice.model.OrderStatus;
 import edu.unimagdalena.paymentservice.model.Payment;
 import edu.unimagdalena.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -20,6 +25,7 @@ public class PaymentController {
     private final Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
     private final PaymentService paymentService;
+    private final CircuitBreakerFactory cBreakerFactory;
 
     @GetMapping
     public Mono<ResponseEntity<List<Payment>>> getAllPayments() {
@@ -37,9 +43,21 @@ public class PaymentController {
 
     @GetMapping("/order/{orderId}")
     public Mono<ResponseEntity<Payment>> getPaymentByOrderId(@PathVariable UUID orderId) {
-        return Mono.just(paymentService.getPaymentByOrderId(orderId)
+        return cBreakerFactory.create("payments").run(() -> Mono.just(paymentService.getPaymentByOrderId(orderId)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()));
+                .orElse(ResponseEntity.notFound().build())), e -> {
+            // Se abre el circuit braker
+            Order order = new Order();
+            order.setId(UUID.randomUUID());
+            order.setStatus(OrderStatus.PROCESSING);
+            order.setPaymentId(orderId);
+            order.setTotalAmount(BigDecimal.valueOf(5000));
+            Payment payment = new Payment();
+            payment.setId(UUID.randomUUID());
+            payment.setOrderId(orderId);
+
+            return Mono.just(ResponseEntity.ok(payment));
+        });
     }
 
     @PostMapping
@@ -61,4 +79,3 @@ public class PaymentController {
         return Mono.just(ResponseEntity.noContent().build());
     }
 }
-

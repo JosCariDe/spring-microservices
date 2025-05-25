@@ -39,7 +39,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Optional<Payment> getPaymentByOrderId(UUID orderId) {
-        return paymentRepository.findByOrderId(orderId);
+        Optional<Order> order = orderServiceClient.getOrderById(orderId);
+        if (order.isPresent()) {
+            return paymentRepository.findById(order.get().getPaymentId());
+        }else {
+            throw new RuntimeException("Order not found");
+        }
     }
 
     @Override
