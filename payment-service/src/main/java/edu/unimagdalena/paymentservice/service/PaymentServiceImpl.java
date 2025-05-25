@@ -1,5 +1,7 @@
 package edu.unimagdalena.paymentservice.service;
 
+import edu.unimagdalena.paymentservice.model.Order;
+import edu.unimagdalena.paymentservice.model.OrderStatus;
 import edu.unimagdalena.paymentservice.model.Payment;
 import edu.unimagdalena.paymentservice.model.PaymentStatus;
 import edu.unimagdalena.paymentservice.repository.PaymentRepository;
@@ -22,6 +24,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     private final PaymentRepository paymentRepository;
+    private final OrderServiceClient orderServiceClient;
 
     @Override
     public List<Payment> getAllPayments() {
@@ -53,6 +56,10 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @CachePut(value = PAYMENT_CACHE, key = "#id")
     public Optional<Payment> updatePayment(UUID id, Payment paymentDetails) {
+
+        UUID idORder = paymentDetails.getOrderId();
+        Order order = orderServiceClient.getOrderById(idORder).get();
+
         return paymentRepository.findById(id)
                 .map(existingPayment -> {
                     if (paymentDetails.getPaymentMethod() != null) {
@@ -60,6 +67,13 @@ public class PaymentServiceImpl implements PaymentService {
                     }
                     if (paymentDetails.getPaymentStatus() != null) {
                         existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
+                        switch (paymentDetails.getPaymentStatus()) {
+                            case COMPLETED:
+                                orderServiceClient.updateOrderStatus(idORder, OrderStatus.DELIVERED);
+                                break;
+                            case REFUNDED:
+                                orderServiceClient.updateOrderStatus(idORder, OrderStatus.CANCELLED);
+                        }
                     }
                     if (paymentDetails.getAmount() != null) {
                         existingPayment.setAmount(paymentDetails.getAmount());
