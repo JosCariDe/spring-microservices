@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import reactor.core.publisher.Mono;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,13 +40,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Optional<Payment> getPaymentByOrderId(UUID orderId) {
-        Optional<Order> order = orderServiceClient.getOrderById(orderId);
-        if (order.isPresent()) {
-            return paymentRepository.findById(order.get().getPaymentId());
-        }else {
-            throw new RuntimeException("Order not found");
-        }
+    public Mono<Payment> getPaymentByOrderId(UUID orderId) {
+        return orderServiceClient.getOrderById(orderId)
+                .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(order.getPaymentId())))
+                .switchIfEmpty(Mono.error(new RuntimeException("Order not found")));
     }
 
     @Override
@@ -60,31 +59,34 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @CachePut(value = PAYMENT_CACHE, key = "#id")
-    public Optional<Payment> updatePayment(UUID id, Payment paymentDetails) {
+    public Mono<Payment> updatePayment(UUID id, Payment paymentDetails) {
+        UUID orderId = paymentDetails.getOrderId();
 
-        UUID idORder = paymentDetails.getOrderId();
-        Order order = orderServiceClient.getOrderById(idORder).get();
-
-        return paymentRepository.findById(id)
-                .map(existingPayment -> {
-                    if (paymentDetails.getPaymentMethod() != null) {
-                        existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
-                    }
-                    if (paymentDetails.getPaymentStatus() != null) {
-                        existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
-                        switch (paymentDetails.getPaymentStatus()) {
-                            case COMPLETED:
-                                orderServiceClient.updateOrderStatus(idORder, OrderStatus.DELIVERED);
-                                break;
-                            case REFUNDED:
-                                orderServiceClient.updateOrderStatus(idORder, OrderStatus.CANCELLED);
-                        }
-                    }
-                    if (paymentDetails.getAmount() != null) {
-                        existingPayment.setAmount(paymentDetails.getAmount());
-                    }
-                    return paymentRepository.save(existingPayment);
-                });
+        return orderServiceClient.getOrderById(orderId)
+                .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(id))
+                        .flatMap(existingPayment -> {
+                            if (paymentDetails.getPaymentMethod() != null) {
+                                existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
+                            }
+                            if (paymentDetails.getPaymentStatus() != null) {
+                                existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
+                                switch (paymentDetails.getPaymentStatus()) {
+                                    case COMPLETED:
+                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.DELIVERED).subscribe();
+                                        break;
+                                    case REFUNDED:
+                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.CANCELLED).subscribe();
+                                        break;
+                                }
+                            }
+                            if (paymentDetails.getAmount() != null) {
+                                existingPayment.setAmount(paymentDetails.getAmount());
+                            }
+                            return Mono.just(paymentRepository.save(existingPayment));
+                        })
+                        .switchIfEmpty(Mono.error(new RuntimeException("Payment not found")))
+                )
+                .switchIfEmpty(Mono.error(new RuntimeException("Order not found")));
     }
 
     @Override
@@ -92,4 +94,3 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.deleteById(id);
     }
 }
-

@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -34,30 +33,33 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Payment>> getPaymentById(@PathVariable UUID id) {
+    public ResponseEntity<Payment> getPaymentById(@PathVariable UUID id) {
         logger.info("Get payment by id");
-        return Mono.just(paymentService.getPaymentById(id)
+        return paymentService.getPaymentById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()));
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/order/{orderId}")
     public Mono<ResponseEntity<Payment>> getPaymentByOrderId(@PathVariable UUID orderId) {
-        return cBreakerFactory.create("payments").run(() -> Mono.just(paymentService.getPaymentByOrderId(orderId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build())), e -> {
-            // Se abre el circuit braker
-            Order order = new Order();
-            order.setId(UUID.randomUUID());
-            order.setStatus(OrderStatus.PROCESSING);
-            order.setPaymentId(orderId);
-            order.setTotalAmount(BigDecimal.valueOf(5000));
-            Payment payment = new Payment();
-            payment.setId(UUID.randomUUID());
-            payment.setOrderId(orderId);
-
-            return Mono.just(ResponseEntity.ok(payment));
-        });
+        return cBreakerFactory.create("payments").run(
+                () -> paymentService.getPaymentByOrderId(orderId)
+                        .map(ResponseEntity::ok)
+                        .switchIfEmpty(Mono.just(ResponseEntity.notFound().build())),
+                e -> {
+                    logger.error("Error getting payment by order ID: {}", e.getMessage());
+                    // Fallback logic
+                    Order order = new Order();
+                    order.setId(UUID.randomUUID());
+                    order.setStatus(OrderStatus.PROCESSING);
+                    order.setPaymentId(orderId);
+                    order.setTotalAmount(BigDecimal.valueOf(5000));
+                    Payment payment = new Payment();
+                    payment.setId(UUID.randomUUID());
+                    payment.setOrderId(orderId);
+                    return Mono.just(ResponseEntity.ok(payment));
+                }
+        );
     }
 
     @PostMapping
@@ -68,9 +70,9 @@ public class PaymentController {
 
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Payment>> updatePayment(@PathVariable UUID id, @RequestBody Payment payment) {
-        return Mono.just(paymentService.updatePayment(id, payment)
+        return paymentService.updatePayment(id, payment)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()));
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
     @DeleteMapping("/{id}")
