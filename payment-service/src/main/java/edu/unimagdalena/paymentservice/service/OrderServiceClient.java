@@ -21,7 +21,7 @@ public class OrderServiceClient {
 
     public Mono<Order> getOrderById(UUID orderId) {
         return webClient.get()
-                .uri("/api/orders/{orderId}", orderId)
+                .uri("/{orderId}", orderId)
                 .retrieve()
                 .bodyToMono(Order.class);
     }
