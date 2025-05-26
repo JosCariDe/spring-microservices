@@ -28,8 +28,8 @@ public class OrderServiceClient {
 
     public Mono<Order> updateOrderStatus(UUID orderId, OrderStatus newStatus) {
         return webClient.patch()
-                .uri("/api/orders/{orderId}/status", orderId)
-                .bodyValue(newStatus)
+                .uri("/{orderId}/status", orderId)
+                .bodyValue(newStatus.name())
                 .retrieve()
                 .bodyToMono(Order.class);
     }

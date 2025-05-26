@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -64,6 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return orderServiceClient.getOrderById(orderId)
                 .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(id))
+                        .publishOn(Schedulers.boundedElastic())
                         .flatMap(existingPayment -> {
                             if (paymentDetails.getPaymentMethod() != null) {
                                 existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
