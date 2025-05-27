@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RefreshScope
 @RestController
@@ -24,6 +25,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
+
     @GetMapping
     public Flux<Order> getAllOrders() {
 
@@ -33,8 +35,15 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Order>> getOrderById(@PathVariable UUID id) {
+    public Mono<ResponseEntity<Order>> getOrderById(@PathVariable UUID id) throws InterruptedException {
 
+        logger.info("Obteniendo odrder con id {}", id);
+        if (id.equals(UUID.fromString("550e8400-e29b-41d4-a716-446655440010"))){
+            throw new IllegalStateException("El id del controller no se puede encontrar!!");
+        }
+        if (id.equals(UUID.fromString("550e8400-e29b-41d4-a716-44665544000"))){
+            TimeUnit.SECONDS.sleep(5L);
+        }
 
         return Mono.justOrEmpty(orderService.getOrderById(id))
                 .map(ResponseEntity::ok)

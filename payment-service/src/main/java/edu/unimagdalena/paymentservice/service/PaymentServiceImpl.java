@@ -44,7 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Mono<Payment> getPaymentByOrderId(UUID orderId) {
         return orderServiceClient.getOrderById(orderId)
                 .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(order.getPaymentId())))
-                .switchIfEmpty(Mono.error(new RuntimeException("Order not found")));
+                .switchIfEmpty(Mono.error(new IllegalStateException("Order not found")));
     }
 
     @Override

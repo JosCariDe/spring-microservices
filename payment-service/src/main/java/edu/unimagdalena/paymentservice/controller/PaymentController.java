@@ -42,6 +42,7 @@ public class PaymentController {
 
     @GetMapping("/order/{orderId}")
     public Mono<ResponseEntity<Payment>> getPaymentByOrderId(@PathVariable UUID orderId) {
+        logger.info("Get payment by order id {}", orderId);
         return cBreakerFactory.create("payments").run(
                 () -> paymentService.getPaymentByOrderId(orderId)
                         .map(ResponseEntity::ok)
