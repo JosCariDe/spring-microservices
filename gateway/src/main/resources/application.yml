@@ -2,8 +2,22 @@ server:
   port: 4040
 
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            scope: openid
+            client-id: microservices_client
+            client-secret: L6zD14eqSWhzMMbSCZxWoV2Ixld9ZD4B
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:9090/realms/microservices-realm
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:4040/login/oauth2/code/keycloak
   application:
-    name: api-gateway
+    name: gateway
 
   cloud:
     gateway:
@@ -11,12 +25,18 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      default-filters:
+        - SaveSession
+        - TokenRelay
+
+
+
 
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8861/eureka
+      defaultZone: http://eureka:password@localhost:8861/eureka
     register-with-eureka: true
     fetch-registry: true
     initial-instance-info-replication-interval-seconds: 5

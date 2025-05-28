@@ -16,4 +16,13 @@ eureka:
 spring:
   application:
     name: eureka-server
+  security:
+    user:
+      name: eureka
+      password: password
+
+logging:
+  level:
+    org.springframework.web: debug
+    org.springframework.security: debug
 
