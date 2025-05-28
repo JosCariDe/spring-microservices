@@ -4,54 +4,80 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebFluxSecurity  // ← Cambio principal: WebFlux en lugar de WebSecurity
 public class SecurityConfig {
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .anyRequest().authenticated()
+                .authorizeExchange(exchanges -> exchanges
+                        // Permitir endpoints de actuator y health checks
+                        .pathMatchers("/actuator/**", "/health/**").permitAll()
+                        // Permitir documentación de API
+                        .pathMatchers("/v3/api-docs/**", "/webjars/**").permitAll()
+                        .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
-                );
-        return http.build();
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                )
+                .build();
     }
 
-    private Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthConverter() {
+    @Bean
+    public Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRealmRoleConverter());
-        return converter;
+        return new ReactiveJwtAuthenticationConverterAdapter(converter);
     }
 }
 
 @SuppressWarnings("unchecked")
-class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>>{
+class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
-        if (jwt.getClaims() == null){
-            return List.of();
+        // Validación de claims
+        if (jwt.getClaims() == null || jwt.getClaims().isEmpty()) {
+            return Collections.emptyList();
         }
 
-        final Map<String, List<String>> realmAccess = (Map<String, List<String>>) jwt.getClaims().get("realm_access");
+        // Obtener realm_access de forma segura
+        Object realmAccessObj = jwt.getClaims().get("realm_access");
+        if (!(realmAccessObj instanceof Map)) {
+            return Collections.emptyList();
+        }
 
-        return realmAccess.get("roles").stream()
-                .map(roleName -> "ROLE_" + roleName)
+        Map<String, Object> realmAccess = (Map<String, Object>) realmAccessObj;
+        Object rolesObj = realmAccess.get("roles");
+
+        // Validar que roles existe y es una lista
+        if (!(rolesObj instanceof List)) {
+            return Collections.emptyList();
+        }
+
+        List<String> roles = (List<String>) rolesObj;
+
+        return roles.stream()
+                .filter(role -> role != null && !role.trim().isEmpty())
+                .map(roleName -> "ROLE_" + roleName.trim().toUpperCase())
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }

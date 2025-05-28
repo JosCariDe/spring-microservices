@@ -2,23 +2,23 @@ server:
   port: 4040
 
 spring:
+  application:
+    name: gateway
   security:
     oauth2:
       client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:9090/realms/microservices-realm
+            user-name-attribute: preferred_username
         registration:
           keycloak:
             provider: keycloak
-            scope: openid
+            scope: openid,profile,email
             client-id: microservices_client
             client-secret: L6zD14eqSWhzMMbSCZxWoV2Ixld9ZD4B
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:9090/realms/microservices-realm
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:4040/login/oauth2/code/keycloak
-  application:
-    name: gateway
-
+            redirect-uri: "http://localhost:4040/login/oauth2/code/keycloak"
   cloud:
     gateway:
       discovery:
@@ -28,10 +28,6 @@ spring:
       default-filters:
         - SaveSession
         - TokenRelay
-
-
-
-
 
 eureka:
   client:
@@ -51,4 +47,3 @@ management:
   tracing:
     sampling:
       probability: 1.0
-
