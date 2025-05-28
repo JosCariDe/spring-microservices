@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9019"]
+        labels:
+          app: "prometheus"
+
+  - job_name: "order-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["order-service:8786"]
+
+  - job_name: "inventory-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["inventory-service:8381"]
+
+  - job_name: "payment-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["payment-service:8180"]
+
+  - job_name: "product-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["product-service:8380"]
+
+  - job_name: "gateway"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["gateway:4040"]

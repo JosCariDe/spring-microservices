@@ -101,6 +101,30 @@ services:
     ports:
       - 9411:9411
 
+  ### Prometheus
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - eureka-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9019:9019"
+    networks:
+      - eureka-network
+
   order-postgres:
     image: postgres:15-alpine
     container_name: order_postgres_db
@@ -235,6 +259,7 @@ volumes:
   payment_pgdata:
   mongo_data:
   redis-data:
+  grafana-storage:
 
 networks:
   eureka-network:
