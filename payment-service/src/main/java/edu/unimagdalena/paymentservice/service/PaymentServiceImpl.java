@@ -9,7 +9,10 @@ import edu.unimagdalena.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,8 +46,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Mono<Payment> getPaymentByOrderId(UUID orderId) {
         return orderServiceClient.getOrderById(orderId)
+                .onErrorResume(WebClientResponseException.NotFound.class, e ->
+                        Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found for the given ID", e))
+                )
                 .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(order.getPaymentId())))
-                .switchIfEmpty(Mono.error(new IllegalStateException("Order not found")));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for the given order ID")));
     }
 
     @Override
