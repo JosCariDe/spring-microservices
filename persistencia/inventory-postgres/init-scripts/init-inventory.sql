@@ -1,0 +1,10 @@
+-- init-inventory.sql
+CREATE TABLE IF NOT EXISTS inventory (
+    id UUID PRIMARY KEY,
+    products JSONB
+);
+
+INSERT INTO inventory (id, products)
+VALUES
+    ('550e8400-e29b-41d4-a716-446655440010', '["550e8400-e29b-41d4-a716-446655440002", "550e8400-e29b-41d4-a716-446655440003"]'),
+    ('550e8400-e29b-41d4-a716-446655440011', '["550e8400-e29b-41d4-a716-446655440006"]');

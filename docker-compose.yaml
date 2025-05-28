@@ -1,0 +1,229 @@
+#version: '3.8'
+services:
+
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8861"
+    networks:
+      - eureka-network
+
+  eureka-client:
+    build:
+      context: ./eureka-client
+      dockerfile: Dockerfile
+    ports:
+      - "8080"
+    environment:
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
+    networks:
+      - eureka-network
+    deploy:
+      replicas: 3
+    depends_on:
+      - eureka-server
+
+  discovery-server:
+    container_name: discovery-server
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8083"
+    networks:
+      - eureka-network
+
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    depends_on:
+      - discovery-server
+      - redis
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    ports:
+      - "4000:4040"
+    networks:
+      - eureka-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - eureka-network
+
+  order-postgres:
+    image: postgres:15-alpine
+    container_name: order_postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pwd1
+      POSTGRES_DB: orderdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - order_pgdata:/var/lib/postgresql/data
+      - ./persistencia/order-postgres/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - eureka-network
+
+  order-service:
+    container_name: order-service
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    depends_on:
+      - order-postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/orderdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: pwd1
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+    ports:
+      - "8785:8786"
+    networks:
+      - eureka-network
+
+  inventory-postgres:
+    image: postgres:15-alpine
+    container_name: inventory_postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pwd2
+      POSTGRES_DB: inventorydb
+    ports:
+      - "5434:5432"
+    volumes:
+      - inventory_pgdata:/var/lib/postgresql/data
+      - ./persistencia/inventory-postgres/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - eureka-network
+
+  inventory-service:
+    container_name: inventory-service
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    depends_on:
+      - inventory-postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: pwd2
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+    ports:
+      - "8382:8381"
+    networks:
+      - eureka-network
+
+  payment-postgres:
+    image: postgres:15-alpine
+    container_name: payment_postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pwd3
+      POSTGRES_DB: paymentdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment_pgdata:/var/lib/postgresql/data
+      - ./persistencia/payment-postgres/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - eureka-network
+
+  payment-service:
+    container_name: payment-service
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    depends_on:
+      - payment-postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: pwd3
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+    ports:
+      - "8189:8180"
+    networks:
+      - eureka-network
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./persistencia/mongo/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - eureka-network
+
+  product-service:
+    container_name: product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+      - eureka-server
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+    ports:
+      - "8280:8380"
+    networks:
+      - eureka-network
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - eureka-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - eureka-network
+
+
+volumes:
+  order_pgdata:
+  inventory_pgdata:
+  payment_pgdata:
+  mongo_data:
+  redis-data:
+  grafana-storage:
+
+networks:
+  eureka-network:
+    driver: bridge
