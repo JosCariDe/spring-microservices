@@ -16,12 +16,27 @@ scrape_configs:
         labels:
           app: "prometheus"
 
-  - job_name: "spring-backend"
-    metrics_path: '/actuator/prometheus'
-    scrape_interval: 1s
+  - job_name: "order-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets:
-          - "order-service:8786"
-          - "inventory-service:8381"
-          - "payment-service:8180"
-          - "product-service:8380"
+      - targets: ["order-service:8786"]
+
+  - job_name: "inventory-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["inventory-service:8381"]
+
+  - job_name: "payment-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["payment-service:8180"]
+
+  - job_name: "product-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["product-service:8380"]
+
+  - job_name: "gateway"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["gateway:4040"]
