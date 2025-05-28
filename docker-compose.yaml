@@ -100,6 +100,8 @@ services:
       - STORAGE_TYPE=mem
     ports:
       - 9411:9411
+    networks:
+      - eureka-network
 
   ### Prometheus
   grafana:
