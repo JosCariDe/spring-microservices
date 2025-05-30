@@ -1,9 +1,12 @@
 package edu.unimagdalena.paymentservice.service;
 
+import edu.unimagdalena.paymentservice.controller.PaymentController;
 import edu.unimagdalena.paymentservice.model.Order;
 import edu.unimagdalena.paymentservice.model.OrderStatus;
 import io.micrometer.tracing.CurrentTraceContext;
 import io.micrometer.tracing.TraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +21,8 @@ import java.util.UUID;
 @Service
 public class OrderServiceClient {
 
+    private final Logger logger = LoggerFactory.getLogger(OrderServiceClient.class);
+
     private final WebClient webClient;
     private final CurrentTraceContext currentTraceContext;
 
@@ -28,6 +33,7 @@ public class OrderServiceClient {
     }
 
     public Mono<Order> getOrderById(UUID orderId) {
+        logger.info("OrderServiceClient instantiated");
         return webClient.get()
                 .uri("/{orderId}", orderId)
                 .retrieve()

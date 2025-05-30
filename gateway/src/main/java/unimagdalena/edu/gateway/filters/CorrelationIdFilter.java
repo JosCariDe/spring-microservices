@@ -1,27 +1,37 @@
 package unimagdalena.edu.gateway.filters;
 
-import org.springframework.cloud.gateway.filter.GatewayFilter;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-public class CorrelationIdFilter implements GatewayFilter {
+@Component
+public class CorrelationIdFilter implements GlobalFilter, Ordered {
+
+    private final Logger logger = LoggerFactory.getLogger(CorrelationIdFilter.class);
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // Generar un UUID como correlationId
+        logger.info("CorrelationIdFilter");
         String correlationId = UUID.randomUUID().toString();
 
-        // Agregar el correlationId como cabecera en la solicitud
         exchange.getRequest().mutate()
                 .header("correlationId", correlationId)
                 .build();
 
-        // Agregar el correlationId como cabecera en la respuesta
         exchange.getResponse().getHeaders().add("correlationId", correlationId);
 
         return chain.filter(exchange);
+    }
+
+    @Override
+    public int getOrder() {
+        return 101; // Puedes ajustar la prioridad del filtro si hay otros filtros globales
     }
 }
