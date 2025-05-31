@@ -1,5 +1,7 @@
 package edu.unimagdalena.paymentservice.service;
 
+import edu.unimagdalena.paymentservice.model.Order;
+import edu.unimagdalena.paymentservice.model.OrderStatus;
 import edu.unimagdalena.paymentservice.model.Payment;
 import edu.unimagdalena.paymentservice.model.PaymentStatus;
 import edu.unimagdalena.paymentservice.repository.PaymentRepository;
@@ -7,10 +9,16 @@ import edu.unimagdalena.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     private final PaymentRepository paymentRepository;
+    private final OrderServiceClient orderServiceClient;
 
     @Override
     public List<Payment> getAllPayments() {
@@ -35,8 +44,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Optional<Payment> getPaymentByOrderId(UUID orderId) {
-        return paymentRepository.findByOrderId(orderId);
+    public Mono<Payment> getPaymentByOrderId(UUID orderId) {
+        return orderServiceClient.getOrderById(orderId)
+                .onErrorResume(WebClientResponseException.NotFound.class, e ->
+                        Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found for the given ID", e))
+                )
+                .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(order.getPaymentId())))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for the given order ID")));
     }
 
     @Override
@@ -52,20 +66,35 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @CachePut(value = PAYMENT_CACHE, key = "#id")
-    public Optional<Payment> updatePayment(UUID id, Payment paymentDetails) {
-        return paymentRepository.findById(id)
-                .map(existingPayment -> {
-                    if (paymentDetails.getPaymentMethod() != null) {
-                        existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
-                    }
-                    if (paymentDetails.getPaymentStatus() != null) {
-                        existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
-                    }
-                    if (paymentDetails.getAmount() != null) {
-                        existingPayment.setAmount(paymentDetails.getAmount());
-                    }
-                    return paymentRepository.save(existingPayment);
-                });
+    public Mono<Payment> updatePayment(UUID id, Payment paymentDetails) {
+        UUID orderId = paymentDetails.getOrderId();
+
+        return orderServiceClient.getOrderById(orderId)
+                .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(id))
+                        .publishOn(Schedulers.boundedElastic())
+                        .flatMap(existingPayment -> {
+                            if (paymentDetails.getPaymentMethod() != null) {
+                                existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
+                            }
+                            if (paymentDetails.getPaymentStatus() != null) {
+                                existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
+                                switch (paymentDetails.getPaymentStatus()) {
+                                    case COMPLETED:
+                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.DELIVERED).subscribe();
+                                        break;
+                                    case REFUNDED:
+                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.CANCELLED).subscribe();
+                                        break;
+                                }
+                            }
+                            if (paymentDetails.getAmount() != null) {
+                                existingPayment.setAmount(paymentDetails.getAmount());
+                            }
+                            return Mono.just(paymentRepository.save(existingPayment));
+                        })
+                        .switchIfEmpty(Mono.error(new RuntimeException("Payment not found")))
+                )
+                .switchIfEmpty(Mono.error(new RuntimeException("Order not found")));
     }
 
     @Override
@@ -73,4 +102,3 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.deleteById(id);
     }
 }
-

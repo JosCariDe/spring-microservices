@@ -11,41 +11,7 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-      routes:
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - StripPrefix=2
-        - id: inventory-service
-          uri: lb://inventory-service
-          predicates:
-            - Path=/api/inventory/**
-          filters:
-            - StripPrefix=2
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 20
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 20
-        - id: product-service
-          uri: lb://product-service
-          predicates:
-            - Path=/api/products/**
-          filters:
-            - StripPrefix=2
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/api/payments/**
-          filters:
-            - StripPrefix=2
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
 
 eureka:
   client:
@@ -53,6 +19,24 @@ eureka:
       defaultZone: http://localhost:8861/eureka
     register-with-eureka: true
     fetch-registry: true
+    initial-instance-info-replication-interval-seconds: 5
+    registry-fetch-interval-seconds: 5
+    eureka-service-url-poll-interval-seconds: 5
+    instance-info-replication-interval-seconds: 5
   instance:
     hostname: localhost
     prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+      base-path: /actuator
+  tracing:
+    sampling:
+      probability: 1.0
+
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans

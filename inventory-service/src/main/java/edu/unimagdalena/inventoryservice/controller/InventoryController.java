@@ -3,6 +3,8 @@ package edu.unimagdalena.inventoryservice.controller;
 import edu.unimagdalena.inventoryservice.model.Inventory;
 import edu.unimagdalena.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +17,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class InventoryController {
 
+    private final Logger logger = LoggerFactory.getLogger(InventoryController.class);
+
     private final InventoryService inventoryService;
 
     @GetMapping
     public Flux<Inventory> getAllInventories() {
+        logger.info("getAllInventories");
         return Flux.fromIterable(inventoryService.getAllInventories());
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Inventory>> getInventoryById(@PathVariable UUID id) {
+        logger.info("getInventoryById");
         return Mono.justOrEmpty(inventoryService.getInventoryById(id))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());

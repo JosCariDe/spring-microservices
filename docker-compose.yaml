@@ -54,6 +54,35 @@ services:
     networks:
       - eureka-network
 
+  keycloak:
+    container_name: baeldung-keycloak.openid-provider
+    image: quay.io/keycloak/keycloak:26.2.0
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - 9019:9019
+    volumes:
+      - ./keycloak/:/opt/keycloak/data/import/
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 9090
+      KC_HOSTNAME_URL: http://localhost:9090
+      KC_HOSTNAME_ADMIN_URL: http://localhost:9090
+      KC_HOSTNAME_STRICT_BACKCHANNEL: true
+      KC_HTTP_RELATIVE_PATH: /
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: [ 'CMD-SHELL', '[ -f /tmp/HealthCheck.java ] || echo "public class HealthCheck { public static void main(String[] args) throws java.lang.Throwable { System.exit(java.net.HttpURLConnection.HTTP_OK == ((java.net.HttpURLConnection)new java.net.URL(args[0]).openConnection()).getResponseCode() ? 0 : 1); } }" > /tmp/HealthCheck.java && java /tmp/HealthCheck.java http://localhost:8080/auth/health/live' ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   redis:
     image: redis:7-alpine
     ports:
@@ -63,6 +92,45 @@ services:
     command: redis-server --appendonly yes
     networks:
       - eureka-network
+
+  zipkin:
+    image: openzipkin/zipkin
+    restart: always
+    environment:
+      - STORAGE_TYPE=mem
+    ports:
+      - 9411:9411
+    networks:
+      - eureka-network
+
+  ### Prometheus
+  grafana:
+    image: grafana/grafana:latest
+    pull_policy: always
+    container_name: grafana
+    restart: unless-stopped
+    user: root
+    ports:
+      - "3000:3000"
+    links:
+      - prometheus:prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - .data/grafana:/var/lib/grafana
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./data/prometheus/config:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+    ports:
+      - "9090:9090"
 
   order-postgres:
     image: postgres:15-alpine
@@ -173,7 +241,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./persistencia/mongo/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - eureka-network
 
@@ -199,6 +266,7 @@ volumes:
   payment_pgdata:
   mongo_data:
   redis-data:
+  grafana-storage:
 
 networks:
   eureka-network:

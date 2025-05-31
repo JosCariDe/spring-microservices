@@ -1,16 +1,18 @@
 package edu.unimagdalena.paymentservice.service;
 
+import edu.unimagdalena.paymentservice.model.Order;
 import edu.unimagdalena.paymentservice.model.Payment;
 import edu.unimagdalena.paymentservice.model.PaymentMethod;
 import edu.unimagdalena.paymentservice.model.PaymentStatus;
 import edu.unimagdalena.paymentservice.repository.PaymentRepository;
-import edu.unimagdalena.paymentservice.service.PaymentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +30,8 @@ public class PaymentServiceImplTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+    @Mock
+    private OrderServiceClient orderServiceClient;
 
     @InjectMocks
     private PaymentServiceImpl paymentService;
@@ -35,6 +39,7 @@ public class PaymentServiceImplTest {
     private Payment payment;
     private UUID paymentId;
     private UUID orderId;
+    private Order order;
 
     @BeforeEach
     void setUp() {
@@ -47,6 +52,10 @@ public class PaymentServiceImplTest {
                 .paymentStatus(PaymentStatus.COMPLETED)
                 .amount(new BigDecimal("100.00"))
                 .paymentDate(LocalDateTime.now())
+                .build();
+        order = Order.builder()
+                .id(orderId)
+                .paymentId(paymentId)
                 .build();
     }
 
@@ -96,30 +105,56 @@ public class PaymentServiceImplTest {
     @Test
     void getPaymentByOrderId_WithExistingOrderId_ShouldReturnPayment() {
         // Arrange
-        when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+        when(orderServiceClient.getOrderById(orderId)).thenReturn(Mono.just(order));
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 
         // Act
-        Optional<Payment> result = paymentService.getPaymentByOrderId(orderId);
+        Mono<Payment> result = paymentService.getPaymentByOrderId(orderId);
 
         // Assert
-        assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(payment);
-        verify(paymentRepository, times(1)).findByOrderId(orderId);
+        StepVerifier.create(result)
+                .expectNext(payment)
+                .verifyComplete();
+        verify(orderServiceClient, times(1)).getOrderById(orderId);
+        verify(paymentRepository, times(1)).findById(paymentId);
     }
 
     @Test
-    void getPaymentByOrderId_WithNonExistingOrderId_ShouldReturnEmpty() {
+    void getPaymentByOrderId_WithNonExistingOrderId_ShouldReturnError() {
         // Arrange
         UUID nonExistingOrderId = UUID.randomUUID();
-        when(paymentRepository.findByOrderId(nonExistingOrderId)).thenReturn(Optional.empty());
+        when(orderServiceClient.getOrderById(nonExistingOrderId)).thenReturn(Mono.empty());
 
         // Act
-        Optional<Payment> result = paymentService.getPaymentByOrderId(nonExistingOrderId);
+        Mono<Payment> result = paymentService.getPaymentByOrderId(nonExistingOrderId);
 
         // Assert
-        assertThat(result).isEmpty();
-        verify(paymentRepository, times(1)).findByOrderId(nonExistingOrderId);
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Order not found"))
+                .verify();
+        verify(orderServiceClient, times(1)).getOrderById(nonExistingOrderId);
+        verify(paymentRepository, never()).findById(any(UUID.class));
     }
+
+    @Test
+    void getPaymentByOrderId_WithExistingOrderIdButNoPayment_ShouldReturnError() {
+        // Arrange
+        when(orderServiceClient.getOrderById(orderId)).thenReturn(Mono.just(order));
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
+
+        // Act
+        Mono<Payment> result = paymentService.getPaymentByOrderId(orderId);
+
+        // Assert
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Payment not found")) // This message is from PaymentServiceImpl
+                .verify();
+        verify(orderServiceClient, times(1)).getOrderById(orderId);
+        verify(paymentRepository, times(1)).findById(paymentId);
+    }
+
 
     @Test
     void createPayment_WithoutStatusAndDate_ShouldSetDefaultsAndSavePayment() {
@@ -189,30 +224,34 @@ public class PaymentServiceImplTest {
                 .paymentMethod(PaymentMethod.DEBIT_CARD)
                 .paymentStatus(PaymentStatus.REFUNDED)
                 .amount(new BigDecimal("150.00"))
+                .orderId(orderId) // Add orderId to paymentToUpdate
                 .build();
 
         Payment updatedPayment = Payment.builder()
                 .id(paymentId)
-                .orderId(payment.getOrderId())
+                .orderId(orderId)
                 .paymentMethod(PaymentMethod.DEBIT_CARD)
                 .paymentStatus(PaymentStatus.REFUNDED)
                 .amount(new BigDecimal("150.00"))
                 .paymentDate(payment.getPaymentDate())
                 .build();
 
+        when(orderServiceClient.getOrderById(orderId)).thenReturn(Mono.just(order));
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenReturn(updatedPayment);
+        when(orderServiceClient.updateOrderStatus(any(UUID.class), any(edu.unimagdalena.paymentservice.model.OrderStatus.class))).thenReturn(Mono.just(new Order())); // Mock updateOrderStatus
 
         // Act
-        Optional<Payment> result = paymentService.updatePayment(paymentId, paymentToUpdate);
+        Mono<Payment> result = paymentService.updatePayment(paymentId, paymentToUpdate);
 
         // Assert
-        assertThat(result).isPresent();
-        assertThat(result.get().getPaymentMethod()).isEqualTo(PaymentMethod.DEBIT_CARD);
-        assertThat(result.get().getPaymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(result.get().getAmount()).isEqualTo(new BigDecimal("150.00"));
+        StepVerifier.create(result)
+                .expectNext(updatedPayment)
+                .verifyComplete();
+        verify(orderServiceClient, times(1)).getOrderById(orderId);
         verify(paymentRepository, times(1)).findById(paymentId);
         verify(paymentRepository, times(1)).save(any(Payment.class));
+        verify(orderServiceClient, times(1)).updateOrderStatus(orderId, edu.unimagdalena.paymentservice.model.OrderStatus.CANCELLED); // REFUNDED maps to CANCELLED
     }
 
     @Test
@@ -221,15 +260,21 @@ public class PaymentServiceImplTest {
         UUID nonExistingId = UUID.randomUUID();
         Payment paymentToUpdate = Payment.builder()
                 .paymentStatus(PaymentStatus.FAILED)
+                .orderId(orderId) // Add orderId to paymentToUpdate
                 .build();
 
+        when(orderServiceClient.getOrderById(orderId)).thenReturn(Mono.just(order));
         when(paymentRepository.findById(nonExistingId)).thenReturn(Optional.empty());
 
         // Act
-        Optional<Payment> result = paymentService.updatePayment(nonExistingId, paymentToUpdate);
+        Mono<Payment> result = paymentService.updatePayment(nonExistingId, paymentToUpdate);
 
         // Assert
-        assertThat(result).isEmpty();
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Payment not found"))
+                .verify();
+        verify(orderServiceClient, times(1)).getOrderById(orderId);
         verify(paymentRepository, times(1)).findById(nonExistingId);
         verify(paymentRepository, never()).save(any(Payment.class));
     }
@@ -243,4 +288,3 @@ public class PaymentServiceImplTest {
         verify(paymentRepository, times(1)).deleteById(paymentId);
     }
 }
-
