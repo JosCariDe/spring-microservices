@@ -43,11 +43,9 @@ public class OrderServiceClient {
     public Mono<Order> updateOrderStatus(UUID orderId, OrderStatus newStatus) {
         return webClient.patch()
                 .uri("/{orderId}/status", orderId)
-                .header(HttpHeaders.CONTENT_TYPE, "application/merge-patch+json")
-                .bodyValue(Map.of("status", newStatus.name()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("\"" + newStatus.name() + "\"")
                 .retrieve()
-                .bodyToMono(Order.class)
-                .contextWrite(Context.of(TraceContext.class, currentTraceContext));
-
+                .bodyToMono(Order.class);
     }
 }
