@@ -7,10 +7,47 @@ spring:
 
   cloud:
     gateway:
+      default-filters:
+        - name: CircuitBreaker
+          args:
+            name: exampleCircuitBreaker
+            fallbackUri: forward:/fallback
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      orderServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+      inventoryServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+      productServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+      paymentServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
 
 
 eureka:
@@ -36,7 +73,3 @@ management:
   tracing:
     sampling:
       probability: 1.0
-
-  zipkin:
-    tracing:
-      endpoint: http://zipkin:9411/api/v2/spans

@@ -73,28 +73,40 @@ public class PaymentServiceImpl implements PaymentService {
                 .flatMap(order -> Mono.justOrEmpty(paymentRepository.findById(id))
                         .publishOn(Schedulers.boundedElastic())
                         .flatMap(existingPayment -> {
+                            // Actualizar campos
                             if (paymentDetails.getPaymentMethod() != null) {
                                 existingPayment.setPaymentMethod(paymentDetails.getPaymentMethod());
-                            }
-                            if (paymentDetails.getPaymentStatus() != null) {
-                                existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
-                                switch (paymentDetails.getPaymentStatus()) {
-                                    case COMPLETED:
-                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.DELIVERED).subscribe();
-                                        break;
-                                    case REFUNDED:
-                                        orderServiceClient.updateOrderStatus(orderId, OrderStatus.CANCELLED).subscribe();
-                                        break;
-                                }
                             }
                             if (paymentDetails.getAmount() != null) {
                                 existingPayment.setAmount(paymentDetails.getAmount());
                             }
+
+                            if (paymentDetails.getPaymentStatus() != null) {
+                                existingPayment.setPaymentStatus(paymentDetails.getPaymentStatus());
+
+                                // Guardar primero el payment
+                                Payment savedPayment = paymentRepository.save(existingPayment);
+
+                                // Luego actualizar el order status reactivamente
+                                return updateOrderStatusBasedOnPayment(orderId, paymentDetails.getPaymentStatus())
+                                        .then(Mono.just(savedPayment)); // Retornar el payment guardado
+                            }
+
                             return Mono.just(paymentRepository.save(existingPayment));
                         })
                         .switchIfEmpty(Mono.error(new RuntimeException("Payment not found")))
                 )
                 .switchIfEmpty(Mono.error(new RuntimeException("Order not found")));
+    }
+
+    private Mono<Void> updateOrderStatusBasedOnPayment(UUID orderId, PaymentStatus paymentStatus) {
+        return switch (paymentStatus) {
+            case COMPLETED -> orderServiceClient.updateOrderStatus(orderId, OrderStatus.DELIVERED)
+                    .then(); // Convertir a Mono<Void>
+            case REFUNDED -> orderServiceClient.updateOrderStatus(orderId, OrderStatus.CANCELLED)
+                    .then();
+            default -> Mono.empty(); // No hacer nada para otros estados
+        };
     }
 
     @Override
