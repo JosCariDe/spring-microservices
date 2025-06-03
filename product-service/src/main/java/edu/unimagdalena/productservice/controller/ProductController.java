@@ -2,6 +2,7 @@ package edu.unimagdalena.productservice.controller;
 
 import edu.unimagdalena.productservice.model.Product;
 import edu.unimagdalena.productservice.service.ProductService;
+import edu.unimagdalena.productservice.service.caching.CacheInvalidationService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,14 @@ public class ProductController {
 
     private final Logger logger = LoggerFactory.getLogger(ProductController.class);
     private final ProductService productService;
+    private final CacheInvalidationService cacheInvalidationService;
 
     @GetMapping
-    public Flux<Product> getAllProducts() {
+    public ResponseEntity<Flux<Product>> getAllProducts() {
         logger.info("Get all products");
-        return Flux.fromIterable(productService.getAllProducts());
+        return ResponseEntity.ok()
+                .header("X-Cache", "ORIGIN")
+                .body(Flux.fromIterable(productService.getAllProducts()));
     }
 
     @GetMapping("/{id}")
@@ -66,4 +70,3 @@ public class ProductController {
         return Mono.just(ResponseEntity.noContent().build());
     }
 }
-
