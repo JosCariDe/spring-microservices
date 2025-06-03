@@ -6,12 +6,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import unimagdalena.edu.gateway.filters.CorrelationIdFilter;
 import unimagdalena.edu.gateway.filters.factory.SampleCookieGatewayFilterFactory;
+import unimagdalena.edu.gateway.filters.caching.ProductsCacheGatewayFilter; // Import the caching filter
+import java.time.Duration; // Import Duration
 
 @Configuration
 public class GatewayConfig {
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder, SampleCookieGatewayFilterFactory cookieFilter) {
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
+                                           SampleCookieGatewayFilterFactory cookieFilter,
+                                           ProductsCacheGatewayFilter productsCacheGatewayFilter) { // Inject the caching filter
         return builder.routes()
                 // Ruta para order-service con Circuit Breaker
                 .route("order-service", r -> r
@@ -33,15 +37,18 @@ public class GatewayConfig {
                                         .setFallbackUri("forward:/fallback")))
                         .uri("lb://inventory-service"))
 
-                // Ruta para product-service con Circuit Breaker
+                // Ruta para product-service con Circuit Breaker and Caching
                 .route("product-service", r -> r
                         .path("/api/products/**")
                         .filters(f -> f
                                 .stripPrefix(2)
                                 .circuitBreaker(c -> c
                                         .setName("productServiceCircuitBreaker")
-                                        .setFallbackUri("forward:/fallback")))
-                        .uri("lb://product-service"))
+                                        .setFallbackUri("forward:/fallback"))
+                                .filter(productsCacheGatewayFilter.apply(new ProductsCacheGatewayFilter.Config() {{
+                                    setTtl(Duration.ofMinutes(2)); // Set TTL to 10 minutes
+                                }}))) // Apply the caching filter
+                        .uri("lb://product-service"))   
 
                 // Ruta para payment-service con Circuit Breaker
                 .route("payment-service", r -> r
