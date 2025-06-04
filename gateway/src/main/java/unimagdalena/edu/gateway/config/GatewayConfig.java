@@ -24,7 +24,7 @@ public class GatewayConfig {
                                 .circuitBreaker(c -> c
                                         .setName("orderServiceCircuitBreaker")
                                         .setFallbackUri("forward:/fallback")))
-                        .uri("lb://order-serviceti"))
+                        .uri("lb://order-service"))
 
                 .route("inventory-service", r -> r
                         .path("/api/inventory/**")

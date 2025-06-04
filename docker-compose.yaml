@@ -46,7 +46,7 @@ services:
       - redis
       - eureka-server
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
     ports:
@@ -160,7 +160,6 @@ services:
       - eureka-network
 
   order-service:
-    container_name: order-service
     build:
       context: ./order-service
       dockerfile: Dockerfile
@@ -172,11 +171,13 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd1
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
     ports:
-      - "8785:8786"
+      - "8785"
     networks:
       - eureka-network
+    deploy:
+      replicas: 3
 
   inventory-postgres:
     image: postgres:15-alpine
@@ -194,7 +195,6 @@ services:
       - eureka-network
 
   inventory-service:
-    container_name: inventory-service
     build:
       context: ./inventory-service
       dockerfile: Dockerfile
@@ -206,9 +206,9 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd2
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
     ports:
-      - "8382:8381"
+      - "8382"
     networks:
       - eureka-network
 
@@ -228,7 +228,6 @@ services:
       - eureka-network
 
   payment-service:
-    container_name: payment-service
     build:
       context: ./payment-service
       dockerfile: Dockerfile
@@ -240,9 +239,9 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd3
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
     ports:
-      - "8189:8180"
+      - "8189"
     networks:
       - eureka-network
 
@@ -257,7 +256,6 @@ services:
       - eureka-network
 
   product-service:
-    container_name: product-service
     build:
       context: ./product-service
       dockerfile: Dockerfile
@@ -266,9 +264,9 @@ services:
       - eureka-server
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8083/eureka/
+      EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
     ports:
-      - "8280:8380"
+      - "8280"
     networks:
       - eureka-network
 
