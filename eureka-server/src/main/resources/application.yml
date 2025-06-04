@@ -3,15 +3,19 @@ server:
 
 eureka:
   client:
-    register-with-eureka: false
-    fetch-registry: false
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
   server:
-    enableSelfPreservation: true
-    evictionIntervalTimerInMs: 60000
-    renewalThreshold: 0.85
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 15000
+    peer-node-read-timeout-ms: 5000
+    peer-node-connect-timeout-ms: 2000
+    peer-eureka-nodes-update-interval-ms: 15000
+    response-cache-update-interval-ms: 5000
+    response-cache-auto-expiration-in-seconds: 30
 
 spring:
   application:
